@@ -254,6 +254,7 @@ int suspend_devices_and_enter(suspend_state_t state)
 
 	do {
 		error = suspend_enter(state, &wakeup);
+
 	} while (!error && !wakeup
 		&& platform_suspend_again());
 
