@@ -177,31 +177,25 @@ static inline void arch_spin_unlock(arch_spinlock_t *lock)
 
 static inline void arch_spin_lock(arch_spinlock_t *lock)
 {
-	unsigned long tmp, ticket, next_ticket;
-	unsigned long fixup = msm_krait_need_wfe_fixup;
-
-	/* Grab the next ticket and wait for it to be "served" */
+	register volatile unsigned int *lockp asm ("r0") = &lock->lock;
 	__asm__ __volatile__(
-"1:	ldrex	%[ticket], [%[lockaddr]]\n"
-"	uadd16	%[next_ticket], %[ticket], %[val1]\n"
-"	strex	%[tmp], %[next_ticket], [%[lockaddr]]\n"
-"	teq	%[tmp], #0\n"
+"1:	ldrex	r1, [r0]\n"
+BE("	ror	r1, r1, #16\n")
+"	add	r3, r1, #1\n"
+"	strexh	r2, r3, [r0]\n"
+"	teq	r2, #0\n"
 "	bne	1b\n"
-"	uxth	%[ticket], %[ticket]\n"
-"2:\n"
-#ifdef CONFIG_CPU_32v6K
-"	beq	3f\n"
-	WFE_SAFE("%[fixup]", "%[tmp]")
-"3:\n"
-#endif
-"	ldr	%[tmp], [%[lockaddr]]\n"
-"	cmp	%[ticket], %[tmp], lsr #16\n"
-"	bne	2b"
-	: [ticket]"=&r" (ticket), [tmp]"=&r" (tmp),
-	  [next_ticket]"=&r" (next_ticket), [fixup]"+r" (fixup)
-	: [lockaddr]"r" (&lock->lock), [val1]"r" (1)
-	: "cc");
-	smp_mb();
+
+"	teq	r1, r1, ror #16\n"
+"	beq	5f\n"
+
+"	mov	r2, lr\n"
+"	bl	__arch_spin_lock_slowpath\n"
+
+"5:\n"
+	:
+	: "r" (lockp)
+	: "r1", "r2", "r3", "cc");
 }
 
 static inline int arch_spin_trylock(arch_spinlock_t *lock)
@@ -294,20 +288,24 @@ static inline int arch_spin_is_contended(arch_spinlock_t *lock)
 
 static inline void arch_write_lock(arch_rwlock_t *rw)
 {
-	unsigned long tmp, fixup = msm_krait_need_wfe_fixup;
-
+	register volatile unsigned int *lockp asm ("r0") = &rw->lock;
 	__asm__ __volatile__(
-"1:	ldrex	%[tmp], [%[lock]]\n"
-"	teq	%[tmp], #0\n"
-"	beq	2f\n"
-	WFE_SAFE("%[fixup]", "%[tmp]")
-"2:\n"
-"	strexeq	%[tmp], %[bit31], [%[lock]]\n"
-"	teq	%[tmp], #0\n"
-"	bne	1b"
-	: [tmp] "=&r" (tmp), [fixup] "+r" (fixup)
-	: [lock] "r" (&rw->lock), [bit31] "r" (0x80000000)
-	: "cc");
+"1:	ldrex	r1, [r0]\n"
+"	teq	r1, #0\n"
+"	bne	5f\n"
+"	mov	r1, #0x80000000\n"
+"	strex	r2, r1, [r0]\n"
+"	teq	r2, #0\n"
+"	beq	10f\n"
+
+"5:	mov	r2, lr\n"
+"	sub	lr, pc, # . - 1b + 8\n"
+"	b	__arch_write_lock_slowpath\n"
+
+"10:\n"
+	:
+	: "r" (lockp)
+	: "r1", "r2", "cc");
 
 	smp_mb();
 }
@@ -362,20 +360,23 @@ static inline void arch_write_unlock(arch_rwlock_t *rw)
  */
 static inline void arch_read_lock(arch_rwlock_t *rw)
 {
-	unsigned long tmp, tmp2, fixup = msm_krait_need_wfe_fixup;
-
+	register volatile unsigned int *lockp asm ("r0") = &rw->lock;
 	__asm__ __volatile__(
-"1:	ldrex	%[tmp], [%[lock]]\n"
-"	adds	%[tmp], %[tmp], #1\n"
-"	strexpl	%[tmp2], %[tmp], [%[lock]]\n"
-"	bpl	2f\n"
-	WFE_SAFE("%[fixup]", "%[tmp]")
-"2:\n"
-"	rsbpls	%[tmp], %[tmp2], #0\n"
-"	bmi	1b"
-	: [tmp] "=&r" (tmp), [tmp2] "=&r" (tmp2), [fixup] "+r" (fixup)
-	: [lock] "r" (&rw->lock)
-	: "cc");
+"1:	ldrex	r1, [r0]\n"
+"	adds	r1, r1, #1\n"
+"	bmi	5f\n"
+"	strex	r2, r1, [r0]\n"
+"	teq	r2, #0\n"
+"	beq	10f\n"
+
+"5:	mov	r2, lr\n"
+"	sub	lr, pc, # . - 1b + 8\n"
+"	b	__arch_read_lock_slowpath\n"
+
+"10:\n"
+	:
+	: "r" (lockp)
+	: "r1", "r2", "cc");
 
 	smp_mb();
 }
