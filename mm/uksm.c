@@ -516,7 +516,7 @@ static unsigned int uksm_max_cpu_percentage;
 
 static int uksm_cpu_governor = 1;
 
-static char *uksm_cpu_governor_str[4] = { "full", "medium", "low", "quiet" };
+static char *uksm_cpu_governor_str[3] = { "default", "HighCPU", "Battery", };
 
 struct uksm_cpu_preset_s {
 	int cpu_ratio[SCAN_LADDER_SIZE];
@@ -537,7 +537,7 @@ struct uksm_cpu_preset_s uksm_cpu_preset[4] = {
 	{ {-5000, -6000, -7500, -10000}, {120000, 1000, 500, 250}, 12},
 	{ {-5000, -6000, -7500, -10000}, {180000, 2500, 1000, 500}, 7},
 	{ {-2500, -3500, -5000, -10000}, {300000, 4000, 2500, 1500}, 1},
-};
+
 
 /* Time per page can vary widely; ema seems to respond much better to the
  * bounded range offered by pages per usec.
