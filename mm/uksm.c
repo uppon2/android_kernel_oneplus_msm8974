@@ -516,7 +516,7 @@ static unsigned int uksm_max_cpu_percentage;
 
 static int uksm_cpu_governor = 1;
 
-static char *uksm_cpu_governor_str[3] = { "default", "HighCPU", "Battery", };
+static char *uksm_cpu_governor_str[4] = { "conservative", "performance", "balanced", "battery" };
 
 struct uksm_cpu_preset_s {
 	int cpu_ratio[SCAN_LADDER_SIZE];
@@ -524,20 +524,15 @@ struct uksm_cpu_preset_s {
 	unsigned int max_cpu; /* percentage */
 };
 
-/* This table works substantially differently from stock UKSM; its contents are
- * suitably different.
- * - Ratios: upper rungs' expected CPU usage carries over into lower rungs;
- *   rich areas get full scan speed at the expense of poor areas.  Very low
- *   (<1%) calculated CPU ratios work as expected.
- * - Cover times: these times are used when pages are added to a rung; the scan
- *   rate won't scale down as fewer pages are left to scan.
- */
 struct uksm_cpu_preset_s uksm_cpu_preset[4] = {
-	{ {-5000, -7500, -9000, -10000}, {90000, 500, 200, 100}, 18},
-	{ {-5000, -6000, -7500, -10000}, {120000, 1000, 500, 250}, 12},
-	{ {-5000, -6000, -7500, -10000}, {180000, 2500, 1000, 500}, 7},
-	{ {-2500, -3500, -5000, -10000}, {300000, 4000, 2500, 1500}, 1},
+	{ {10, 20, -5000, -10000}, {1500, 1000, 1000, 250}, 10},
+	{ {10, 20, 40, 75}, {2000, 1000, 1000, 1000}, 20},
+	{ {10, 20, 40, 75}, {2000, 1000, 1000, 1000}, 5},	
+	{ {10, 20, -5000, -10000}, {1500, 1000, 1000, 250}, 1}
+};
 
+/* The default value for uksm_ema_page_time if it's not initialized */
+#define UKSM_PAGE_TIME_DEFAULT	500
 
 /* Time per page can vary widely; ema seems to respond much better to the
  * bounded range offered by pages per usec.
