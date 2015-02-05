@@ -57,7 +57,7 @@ static inline int uksm_memcmp(const void *s1, const void *s2, size_t n)
 	  "=&r" (r1), "=&r" (r2), "=&r" (r3)
 	: : "cc");
 
-	return n
+	return n;
 }
 
 static inline int is_full_zero(void *s1, size_t n)
