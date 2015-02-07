@@ -514,7 +514,7 @@ static unsigned int uksm_sleep_jiffies;
 /* Base CPU limit that ratios are scaled against */
 static unsigned int uksm_max_cpu_percentage;
 
-static int uksm_cpu_governor = 2;
+static int uksm_cpu_governor = 1;
 
 static char *uksm_cpu_governor_str[4] = { "full", "medium", "low", "quiet" };
 
@@ -533,10 +533,10 @@ struct uksm_cpu_preset_s {
  *   rate won't scale down as fewer pages are left to scan.
  */
 struct uksm_cpu_preset_s uksm_cpu_preset[4] = {
-	{ {-5000, -7500, -9000, -10000}, {90000, 500, 200, 100}, 20},
-	{ {-5000, -6000, -7500, -10000}, {120000, 1000, 500, 250}, 15},
-	{ {-5000, -6000, -7500, -10000}, {180000, 2500, 1000, 500}, 10},
-	{ {-2500, -3500, -5000, -10000}, {300000, 4000, 2500, 1500}, 5},
+	{ {-5000, -7500, -9000, -10000}, {90000, 500, 200, 100}, 18},
+	{ {-5000, -6000, -7500, -10000}, {120000, 1000, 500, 250}, 12},
+	{ {-5000, -6000, -7500, -10000}, {180000, 2500, 1000, 500}, 7},
+	{ {-2500, -3500, -5000, -10000}, {300000, 4000, 2500, 1500}, 1},
 };
 
 /* Time per page can vary widely; ema seems to respond much better to the
