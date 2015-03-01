@@ -299,8 +299,7 @@ static inline void arch_write_lock(arch_rwlock_t *rw)
 "	beq	10f\n"
 
 "5:	mov	r2, lr\n"
-"	sub	lr, pc, # . - 1b + 8\n"
-"	b	__arch_write_lock_slowpath\n"
+"	bl	__arch_write_lock_slowpath\n"
 
 "10:\n"
 	:
@@ -332,12 +331,18 @@ static inline int arch_write_trylock(arch_rwlock_t *rw)
 
 static inline void arch_write_unlock(arch_rwlock_t *rw)
 {
+	unsigned long tmp, tmp2;
+
 	smp_mb();
 
 	__asm__ __volatile__(
-	"str	%1, [%0]\n"
-	:
-	: "r" (&rw->lock), "r" (0)
+"1:	ldrex	%0, [%2]\n"
+"	bic	%0, %0, #0x80000000\n"
+"	strex	%1, %0, [%2]\n"
+"	teq	%1, #0\n"
+"	bne	1b"
+	: "=&r" (tmp), "=&r" (tmp2)
+	: "r" (&rw->lock)
 	: "cc");
 
 	dsb_sev();
@@ -363,15 +368,16 @@ static inline void arch_read_lock(arch_rwlock_t *rw)
 	register volatile unsigned int *lockp asm ("r0") = &rw->lock;
 	__asm__ __volatile__(
 "1:	ldrex	r1, [r0]\n"
-"	adds	r1, r1, #1\n"
-"	bmi	5f\n"
+"	add	r1, r1, #1\n"
 "	strex	r2, r1, [r0]\n"
 "	teq	r2, #0\n"
+"	bne	1b\n"
+
+"	tst	r1, #0x80000000\n"
 "	beq	10f\n"
 
 "5:	mov	r2, lr\n"
-"	sub	lr, pc, # . - 1b + 8\n"
-"	b	__arch_read_lock_slowpath\n"
+"	bl	__arch_read_lock_slowpath\n"
 
 "10:\n"
 	:
@@ -413,8 +419,12 @@ static inline int arch_read_trylock(arch_rwlock_t *rw)
 	: "r" (&rw->lock)
 	: "cc");
 
-	smp_mb();
-	return tmp2 == 0;
+	if (tmp2 == 0) {
+		smp_mb();
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 /* read_can_lock - would read_trylock() succeed? */
