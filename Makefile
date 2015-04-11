@@ -335,8 +335,22 @@ ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
 CC		+= -O3
 endif
 CC		+= \
+	$(EXTRA_SABERMOD_GCC_CFLAGS) \
 	$(kernel_arch_variant_cflags) \
 	$(GRAPHITE_KERNEL_FLAGS)
+
+# Handle flags.
+pthread-flag := -pthread
+ifeq ($(call cc-option, $(pthread-flag)),)
+    $(warning $(pthread-flag) not supported by compiler))
+else
+    CC		+= $(pthread-flag)
+endif
+
+ifdef CONFIG_ONEPLUS_ONE_STRICT_ALIASING
+    CC		+= -fstrict-aliasing -Werror=strict-aliasing
+endif
+
 CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
