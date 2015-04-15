@@ -121,3 +121,10 @@ obj-$(CONFIG_IP_SET) += ipset/
 
 # IPVS
 obj-$(CONFIG_IP_VS) += ipvs/
+
+ifdef CONFIG_ONEPLUS_ONE_STRICT_ALIASING
+CFLAGS_KERNEL := -fno-strict-aliasing
+endif
+
+CFLAGS_nf_conntrack_core.o := -fno-loop-unroll-and-jam
+CFLAGS_xt_hashlimit.o := -fno-loop-unroll-and-jam
