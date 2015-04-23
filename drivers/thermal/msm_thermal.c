@@ -1363,7 +1363,7 @@ static void check_temp(struct work_struct *work)
 reschedule:
 	if (polling_enabled)
 		schedule_delayed_work(&check_temp_work,
-				msecs_to_jiffies(msm_thermal_info.poll_ms));
+				msecs_to_jiffies(10000));
 }
 
 static int __ref msm_thermal_cpu_callback(struct notifier_block *nfb,
