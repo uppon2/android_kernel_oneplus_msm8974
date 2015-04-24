@@ -649,7 +649,7 @@ rt_mutex_slowlock(struct rt_mutex *lock, int state,
 		/* sleep on the mutex */
 		ret = __rt_mutex_slowlock(lock, state, timeout, &waiter);
 
-	if (unlikely(ret)) {
+	if (unlikely(ret)) 
 		remove_waiter(lock, &waiter);
 
 	/*
