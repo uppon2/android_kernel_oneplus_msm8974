@@ -533,13 +533,9 @@ int msm_dmov_exec_cmd(unsigned id, unsigned int cmdptr)
 	cmd.id = id;
 	cmd.result = 0;
 	init_completion(&cmd.complete);
-	__msm_dmov_enqueue_cmd_ext(id, &cmd.dmov_cmd, 1);
 
-#ifdef CONFIG_SCHED_BFS
-	wait_for_completion(&cmd.complete);
-#else
+	__msm_dmov_enqueue_cmd_ext(id, &cmd.dmov_cmd, 1);
 	wait_for_completion_io(&cmd.complete);
-#endif
 
 	if (cmd.result != 0x80000002) {
 		PRINT_ERROR("dmov_exec_cmdptr(%d): ERROR, result: %x\n",
