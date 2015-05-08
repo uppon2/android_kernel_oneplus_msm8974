@@ -61,7 +61,7 @@ module_param_named(debug_mask, debug, uint, 0644);
  * suspend mode, if set = 1 hotplug will sleep,
  * if set = 0, then hoplug will be active all the time.
  */
-static unsigned int hotplug_suspend = 0;
+static unsigned int hotplug_suspend = 1;
 module_param_named(hotplug_suspend, hotplug_suspend, uint, 0644);
 
 #define dprintk(msg...)		\
@@ -98,7 +98,7 @@ static struct cpu_hotplug {
 	.msm_enabled = HOTPLUG_ENABLED,
 	.min_cpus_online = DEFAULT_MIN_CPUS_ONLINE,
 	.max_cpus_online = DEFAULT_MAX_CPUS_ONLINE,
-	.suspended = 0,
+	.suspended = 1,
 	.suspend_defer_time = DEFAULT_SUSPEND_DEFER_TIME,
 	.min_cpus_online_res = DEFAULT_MIN_CPUS_ONLINE,
 	.max_cpus_online_res = DEFAULT_MAX_CPUS_ONLINE,
