@@ -243,10 +243,80 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
+# begin The SaberMod Project additions
+
+# Copyright (C) 2015 The SaberMod Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Handle kernel CFLAGS
+
+# Highest level of basic gcc optimizations if enabled
+# This reads a imported string from the sabermod modified android build system
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+SABERMOD_KERNEL_CFLAGS	:= -O3
+else
+SABERMOD_KERNEL_CFLAGS	:= -O2
+endif
+
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+    # Extra flags imported from the sabermod modified android build system
+    # This will not accually do anything unless these strings are defined
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS += $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
+    else
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS := $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
+    endif
+endif
+
+ifdef SABERMOD_KERNEL_CFLAGS
+    ifdef kernel_arch_variant_cflags
+    SABERMOD_KERNEL_CFLAGS	+= $(kernel_arch_variant_cflags)
+    endif
+else
+    ifdef kernel_arch_variant_cflags
+    SABERMOD_KERNEL_CFLAGS	:= $(kernel_arch_variant_cflags)
+    endif
+endif
+
+ifeq ($(strip $(ENABLE_GRAPHITE)),true)
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
+        endif
+    else
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(GRAPHITE_KERNEL_FLAGS)
+        endif
+    endif
+endif
+# end The SaberMod Project additions
+
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
-HOSTCXXFLAGS = -O2
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer $(SABERMOD_KERNEL_CFLAGS)
+HOSTCXXFLAGS = $(SABERMOD_KERNEL_CFLAGS)
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -350,112 +420,9 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL	=
+CFLAGS_KERNEL	= $(SABERMOD_KERNEL_CFLAGS)
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
-
-# begin The SaberMod Project additions
-
-# Copyright (C) 2015 The SaberMod Project
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-# Handle kernel CFLAGS
-
-# Highest level of basic gcc optimizations if enabled
-# This reads a imported string from the sabermod modified android build system
-ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
-SABERMOD_KERNEL_CFLAGS	:= -O3
-endif
-
-ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
-    # Extra flags imported from the sabermod modified android build system
-    # This will not accually do anything unless these strings are defined
-    ifdef SABERMOD_KERNEL_CFLAGS
-        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
-        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
-        endif
-        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
-        SABERMOD_KERNEL_CFLAGS += $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
-        endif
-    else
-        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
-        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
-        endif
-        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
-        SABERMOD_KERNEL_CFLAGS := $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
-        endif
-    endif
-endif
-
-ifdef SABERMOD_KERNEL_CFLAGS
-    ifdef kernel_arch_variant_cflags
-    SABERMOD_KERNEL_CFLAGS	+= $(kernel_arch_variant_cflags)
-    endif
-else
-    ifdef kernel_arch_variant_cflags
-    SABERMOD_KERNEL_CFLAGS	:= $(kernel_arch_variant_cflags)
-    endif
-endif
-
-ifeq ($(strip $(ENABLE_PTHREAD)),true)
-  # posix (pthread) C flag, if the compiler supports it
-  # Using a flag like -ftree-parallelize-loops=n can disable this feature
-  # In such cases the -pthread flag will not get passed to gcc
-  # Instead it will give a warning
-  pthread-flag	:= -pthread
-  ifeq ($(call cc-option, $(pthread-flag)),)
-  $(warning ********************************************************************************)
-  $(warning * $(pthread-flag) not supported by compiler)
-  $(warning * Or another gcc flag has disabled it)
-  $(warning * Not passing the $(pthread-flag) option to gcc)
-  $(warning ********************************************************************************)
-  else
-      ifdef SABERMOD_KERNEL_CFLAGS
-      SABERMOD_KERNEL_CFLAGS	+= $(pthread-flag)
-      else
-      SABERMOD_KERNEL_CFLAGS	:= $(pthread-flag)
-      endif
-  endif
-endif
-
-# Strict aliasing for hammerhead if enabled in the defconfig
-ifdef CONFIG_ONEPLUS_ONE_STRICT_ALIASING
-    ifdef SABERMOD_KERNEL_CFLAGS
-    SABERMOD_KERNEL_CFLAGS	+= -fstrict-aliasing -Werror=strict-aliasing
-    else
-    SABERMOD_KERNEL_CFLAGS	:= -fstrict-aliasing -Werror=strict-aliasing
-    endif
-endif
-
-ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
-    ifdef SABERMOD_KERNEL_CFLAGS
-        ifdef GRAPHITE_KERNEL_FLAGS
-        SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
-        endif
-    else
-        ifdef GRAPHITE_KERNEL_FLAGS
-        SABERMOD_KERNEL_CFLAGS	:= $(GRAPHITE_KERNEL_FLAGS)
-        endif
-    endif
-endif
-
-# Add everything to CC at the end
-ifdef SABERMOD_KERNEL_CFLAGS
-CC	+= $(SABERMOD_KERNEL_CFLAGS)
-endif
-# end The SaberMod Project additions
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
@@ -470,9 +437,10 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks
+		   -fno-delete-null-pointer-checks \
+		   $(SABERMOD_KERNEL_CFLAGS)
 KBUILD_AFLAGS_KERNEL :=
-KBUILD_CFLAGS_KERNEL :=
+KBUILD_CFLAGS_KERNEL := $(SABERMOD_KERNEL_CFLAGS)
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
@@ -482,7 +450,7 @@ KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
 
-export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
+export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION SABERMOD_KERNEL_CFLAGS
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP
 export MAKE AWK GENKSYMS INSTALLKERNEL PERL UTS_MACHINE
