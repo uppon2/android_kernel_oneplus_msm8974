@@ -13,6 +13,7 @@
 #include <crypto/ablk_helper.h>
 #include <crypto/algapi.h>
 #include <linux/module.h>
+#include <linux/bug.h>
 
 #include "aes_glue.h"
 

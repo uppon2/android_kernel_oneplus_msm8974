@@ -266,8 +266,9 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 # This reads a imported string from the sabermod modified android build system
 ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
 SABERMOD_KERNEL_CFLAGS	:= -O3
+SABERMOD_KERNEL_OLEVEL	:= -O3
 else
-SABERMOD_KERNEL_CFLAGS	:= -O2
+SABERMOD_KERNEL_OLEVEL	:= -O2
 endif
 
 ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
@@ -300,7 +301,7 @@ else
     endif
 endif
 
-ifeq ($(strip $(ENABLE_GRAPHITE)),true)
+ifeq ($(strip $(ENABLE_KERNEL_GRAPHITE)),true)
     ifdef SABERMOD_KERNEL_CFLAGS
         ifdef GRAPHITE_KERNEL_FLAGS
         SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
@@ -315,8 +316,8 @@ endif
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer $(SABERMOD_KERNEL_CFLAGS)
-HOSTCXXFLAGS = $(SABERMOD_KERNEL_CFLAGS)
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer $(SABERMOD_KERNEL_OLEVEL)
+HOSTCXXFLAGS = $(SABERMOD_KERNEL_OLEVEL)
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
