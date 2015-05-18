@@ -1,0 +1,190 @@
+#!/bin/bash
+#
+# Copyright (C) 2015 YoshiShaPow <yoshipga@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Thanks to @ak and @savoca for parts of the build script
+
+echo '             _____   _       ___             '
+echo '            |__ __| | |___  | _ |            '
+echo '              | |   |  _  | | __|            '
+echo '              |_|   |_| |_| |___|            '
+echo '         ____                                '
+echo '        |  __|   ____  ___  ___  ____        '
+echo '        |  | __ | ___|| _ || _ || __ |       '
+echo '        |  |_| || |   | __|| __|| || |       '
+echo '        |______||_|   |___||___||_||_|       '
+echo '  ________                                    '
+echo ' |        | ______  ____  _      _  ____  ___ '
+echo ' |  |  |  ||  _   ||  __|| |___ | || __ || __|'
+echo ' |  |  |  || |_|  || |__ |  _  || || || || __|'
+echo ' |__|__|__||____|_||____||_| |_||_||_||_||___|'
+echo
+echo '       TGM-Hybrid Script by YoshiShaPow       '
+echo
+DEVICE="bacon"
+echo "Building for $DEVICE"
+echo
+
+# Directories
+OUT=~/kernels/out/$DEVICE
+ANYKERNEL_DIR=~/kernels/$DEVICE-anykernel
+BUILD_DIR=~/kernels/"bacon-a"
+
+# Toolchains
+linaromod=~/kernels/toolchains/LinaroMod/bin/arm-eabi-
+sabernaro=~/kernels/toolchains/SaberNaro/bin/arm-eabi-
+linaro=~/kernels/toolchains/Linaro/bin/arm-eabi-
+uber=~/kernels/toolchains/UBER/bin/arm-eabi-
+sabermod=~/kernels/toolchains/SaberMod/bin/arm-eabi-
+
+# Basics
+THREAD=-j6
+KERNEL=zImage
+DTBIMAGE=dtb
+DEFCONFIG=tgm_bacon_defconfig
+
+export ARCH=arm
+export SUBARCH=arm
+
+# Functions
+function linaromod {
+	toolchain="LinaroMod-4.9"
+	export CROSS_COMPILE=$linaromod
+}
+
+function sabernaro {
+	toolchain="SaberNaro-4.9"
+	export CROSS_COMPILE=$sabernaro
+}
+
+function uber {
+	toolchain="UBER-6.0"
+	export CROSS_COMPILE=$uber
+}
+
+function linaro {
+	toolchain="Linaro-4.9"
+	export CROSS_COMPILE=$linaro
+}
+
+function sabermod {
+	toolchain="SaberMod-6.0"
+	export CROSS_COMPILE=$sabermod
+}
+
+function make_clean {
+		cd $ANYKERNEL_DIR
+		rm -rf $KERNEL
+		rm -rf $DTBIMAGE
+		rm -rf *~
+		cd $BUILD_DIR
+		make clean && make mrproper
+		rm -rf *~
+		echo
+}
+
+function make_kernel {
+		echo "What release is this going to be?"
+		read VERSION
+		TGM_VER=TGM-Hybrid-$toolchain-$VERSION
+		export LOCALVERSION="-$TGM_VER"
+		DATE_START=$(date +"%s")
+		echo
+		make $DEFCONFIG
+		make $THREAD
+		cp -r arch/arm/boot/$KERNEL $ANYKERNEL_DIR/$KERNEL
+		DATE_END=$(date +"%s")
+		DIFF=$(($DATE_END - $DATE_START))
+}
+
+function make_dtb {
+		$ANYKERNEL_DIR/tools/dtbToolCM -2 -o $ANYKERNEL_DIR/$DTBIMAGE -s 2048 -p scripts/dtc/ arch/arm/boot/
+}
+
+function make_zip {
+		cd $ANYKERNEL_DIR
+		zip -r9 $TGM_VER-$DEVICE.zip *
+		mv  $TGM_VER-$DEVICE.zip $OUT
+		cd $KERNEL_DIR
+		echo "Time: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
+		echo
+		echo "$TGM_VER-$DEVICE.zip"
+		echo
+}
+
+while read -p "What toolchain will you use? " cchoice
+do
+case "$cchoice" in
+	sn )
+		sabernaro
+		break
+		;;
+	lm )
+		linaromod
+		break
+		;;
+	uber )
+		uber
+		break
+		;;
+	linaro )
+		linaro
+		break
+		;;
+	sm )
+		sabermod
+		break
+		;;
+	* )
+		echo "Invalid try again!"
+		;;
+esac
+done
+
+echo "You are building with $toolchain"
+echo
+
+while read -p "Would you like to clean (y/n)? " cchoice
+do
+case "$cchoice" in
+	y|Y )
+		make_clean
+		echo "All Cleaned now."
+		break
+		;;
+	n|N )
+		break
+		;;
+	* )
+		echo "Invalid try again!"
+		echo
+		;;
+esac
+done
+
+echo
+
+while read -p "Do you want to build (y/n)? " cchoice
+do
+case "$cchoice" in
+	y|Y )
+		make_kernel
+		make_dtb
+		make_zip
+		break
+		;;
+	n|N )
+		break
+		;;
+	* )
+		echo
+		echo "Invalid try again!"
+		echo
+		;;
+esac
+done
