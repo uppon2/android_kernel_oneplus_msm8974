@@ -33,7 +33,7 @@ echo
 # Directories
 OUT=~/kernels/out/$DEVICE
 ANYKERNEL_DIR=~/kernels/$DEVICE-anykernel
-BUILD_DIR=~/kernels/"bacon-a"
+BUILD_DIR=~/kernels/$DEVICE
 
 # Toolchains
 linaromod=~/kernels/toolchains/LinaroMod/bin/arm-eabi-
