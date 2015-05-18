@@ -245,8 +245,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -DNDEBUG -pipe -fgcse-las 
-HOSTCXXFLAGS = -O3 -DNDEBUG -pipe -fgcse-las
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -DNDEBUG -pipe -fgcse-las -fgraphite -fgraphite-identity -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-nest-optimize
+HOSTCXXFLAGS = -Ofast -DNDEBUG -pipe -fgcse-las -fgraphite -fgraphite-identity -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-nest-optimize
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -337,12 +337,11 @@ GRAPHITE_LOOP := -floop-interchange \
 		 -floop-unroll-and-jam \
 		 -floop-nest-optimize
 
-O3_FLAGS      := -O3 \
+OPTIMIZATIONS := -Ofast \
 		 -fgcse-sm \
 		 -Wno-array-bounds \
 		 -Wno-error=strict-overflow
 
-FAST_MATH     := -ffast-math
 LTO_FLAGS     := -flto=4 -fuse-linker-plugin
 PIPE          := -pipe
 DNDEBUG       := -DNDEBUG
@@ -371,7 +370,7 @@ STRICT_FLAGS  := -fstrict-aliasing \
 
 AS		= $(CROSS_COMPILE)as
 LD		:= $(CROSS_COMPILE)ld $(LTO)
-CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(O3_FLAGS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(STRICT_FLAGS) $(DNDEBUG)
+CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(STRICT_FLAGS) $(DNDEBUG)
 CPP		:= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
@@ -599,7 +598,7 @@ endif # $(dot-config)
 # Defaults to vmlinux, but the arch makefile usually adds further targets
 all: vmlinux
 
-KBUILD_CFLAGS	+= -O3
+KBUILD_CFLAGS	+= -Ofast
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
 
