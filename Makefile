@@ -327,37 +327,39 @@ $(srctree)/scripts/Kbuild.include: ;
 include $(srctree)/scripts/Kbuild.include
 
 # Make variables (CC, etc...)
-GRAPHITE      := -fgraphite \
+export CTNG_LD_IS = gold
+
+GRAPHITE	:= -fgraphite \
 		 -fgraphite-identity
 
-GRAPHITE_LOOP := -floop-interchange \
+GRAPHITE_LOOP	:= -floop-interchange \
 		 -floop-strip-mine \
 		 -floop-block	\
 		 -ftree-loop-linear \
 		 -floop-unroll-and-jam \
 		 -floop-nest-optimize
 
-OPTIMIZATIONS := -Ofast \
+OPTIMIZATIONS	:= -Ofast \
 		 -fgcse-sm \
 		 -Wno-array-bounds \
 		 -Wno-error=strict-overflow
 
-LTO_FLAGS     := -flto=4 -fuse-linker-plugin
-PIPE          := -pipe
-DNDEBUG       := -DNDEBUG
+LTO		:= -flto=4
+PIPE		:= -pipe
+DNDEBUG		:= -DNDEBUG
 
-TUNE_FLAGS    := -marm \
+TUNE_FLAGS	:= -marm \
 		 -mtune=cortex-a15 \
 		 -mcpu=cortex-a15 \
 		 -march=armv7ve \
 		 -mfpu=neon-vfpv4
 
-PARAMETERS    := --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
+PARAMETERS	:= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
 
-MODULO_SCHED  := -fmodulo-sched \
+MODULO_SCHED	:= -fmodulo-sched \
 		 -fmodulo-sched-allow-regmoves
 
-EXTRA_LOOP    := -ftree-loop-distribution \
+EXTRA_LOOP	:= -ftree-loop-distribution \
 		 -ftree-loop-if-convert \
 		 -ftree-loop-im \
 		 -ftree-loop-ivcanon \
@@ -365,11 +367,11 @@ EXTRA_LOOP    := -ftree-loop-distribution \
 		 -mvectorize-with-neon-quad \
 		 -fprefetch-loop-arrays
 
-STRICT_FLAGS  := -fstrict-aliasing \
+STRICT_FLAGS	:= -fstrict-aliasing \
 		 -Werror=strict-aliasing
 
 AS		= $(CROSS_COMPILE)as
-LD		:= $(CROSS_COMPILE)ld $(LTO)
+LD		:= $(CROSS_COMPILE)ld -O3 $(LTO)
 CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(STRICT_FLAGS) $(DNDEBUG)
 CPP		:= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
