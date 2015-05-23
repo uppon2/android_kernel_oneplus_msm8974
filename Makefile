@@ -329,6 +329,7 @@ include $(srctree)/scripts/Kbuild.include
 # Make variables (CC, etc...)
 export CTNG_LD_IS = gold
 
+ifeq ($(ENABLE_GRAPHITE),true)
 GRAPHITE	:= -fgraphite \
 		 -fgraphite-identity
 
@@ -338,8 +339,10 @@ GRAPHITE_LOOP	:= -floop-interchange \
 		 -ftree-loop-linear \
 		 -floop-unroll-and-jam \
 		 -floop-nest-optimize
+endif
 
-OPTIMIZATIONS	:= -Ofast  $(call cc-disable-warning,maybe-uninitialized,) \
+ifeq ($(O3_OPTIMIZATIONS),true)
+OPTIMIZATIONS	:= -O3  $(call cc-disable-warning,maybe-uninitialized,) \
 		 -fgcse-sm \
 		 -Wno-array-bounds \
 		 -Wno-error=strict-overflow
@@ -348,6 +351,7 @@ LTO		:= -flto=4
 PIPE		:= -pipe
 DNDEBUG		:= -DNDEBUG -g0
 
+ifeq ($(ENABLE_TUNE),true)
 TUNE_FLAGS	:= -marm \
 		 -mtune=cortex-a15 \
 		 -mcpu=cortex-a15 \
@@ -355,7 +359,9 @@ TUNE_FLAGS	:= -marm \
 		 -mfpu=neon-vfpv4
 
 PARAMETERS	:= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
+endif
 
+ifeq ($(ENABLE_EXTRA),true)
 MODULO_SCHED	:= -fmodulo-sched \
 		 -fmodulo-sched-allow-regmoves
 
@@ -366,13 +372,11 @@ EXTRA_LOOP	:= -ftree-loop-distribution \
 		 -ftree-vectorize \
 		 -mvectorize-with-neon-quad \
 		 -fprefetch-loop-arrays
-
-STRICT_FLAGS	:= -fstrict-aliasing \
-		 -Werror=strict-aliasing
+endif
 
 AS		= $(CROSS_COMPILE)as
 LD		:= $(CROSS_COMPILE)ld -O3 $(LTO)
-CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(STRICT_FLAGS) $(DNDEBUG)
+CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(DNDEBUG)
 CPP		:= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
