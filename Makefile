@@ -346,7 +346,7 @@ OPTIMIZATIONS	:= -Ofast  $(call cc-disable-warning,maybe-uninitialized,) \
 
 LTO		:= -flto=4
 PIPE		:= -pipe
-DNDEBUG		:= -DNDEBUG
+DNDEBUG		:= -DNDEBUG -g0
 
 TUNE_FLAGS	:= -marm \
 		 -mtune=cortex-a15 \
