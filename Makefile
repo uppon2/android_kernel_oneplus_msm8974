@@ -331,14 +331,17 @@ export CTNG_LD_IS = gold
 
 ifeq ($(ENABLE_GRAPHITE),true)
 GRAPHITE	:= -fgraphite \
-		 -fgraphite-identity
+		 -fgraphite-identity \
+		 -fopenmp
 
 GRAPHITE_LOOP	:= -floop-interchange \
 		 -floop-strip-mine \
 		 -floop-block	\
 		 -ftree-loop-linear \
-		 -floop-unroll-and-jam \
 		 -floop-nest-optimize
+ifneq ($(filter %5% %6%,$(TARGET_SM_KERNEL)),)
+GRAPHITE_LOOP	+= -floop-unroll-and-jam 
+endif
 endif
 
 ifeq ($(O3_OPTIMIZATIONS),true)
@@ -346,6 +349,7 @@ OPTIMIZATIONS	:= -O3  $(call cc-disable-warning,maybe-uninitialized,) \
 		 -fgcse-sm \
 		 -Wno-array-bounds \
 		 -Wno-error=strict-overflow
+endif
 
 LTO		:= -flto=4
 PIPE		:= -pipe

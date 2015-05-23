@@ -1,5 +1,10 @@
-CFLAGS_nf_conntrack_core.o := -fno-unsafe-math-optimizations -fno-loop-unroll-and-jam
-CFLAGS_xt_hashlimit.o := -fno-unsafe-math-optimizations -fno-loop-unroll-and-jam
+CFLAGS_nf_conntrack_core.o := -fno-unsafe-math-optimizations 
+CFLAGS_xt_hashlimit.o := -fno-unsafe-math-optimizations
+
+ifneq ($(filter %5% %6%,$(TARGET_SM_KERNEL)),)
+CFLAGS_nf_conntrack_core.o += -fno-loop-unroll-and-jam
+CFLAGS_xt_hashlimit.o += -fno-loop-unroll-and-jam
+endif
 
 netfilter-objs := core.o nf_log.o nf_queue.o nf_sockopt.o
 
