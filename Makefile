@@ -245,9 +245,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -DNDEBUG -pipe -fgcse-las -fgraphite -fgraphite-identity -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-nest-optimize
-HOSTCXXFLAGS = -Ofast -DNDEBUG -pipe -fgcse-las -fgraphite -fgraphite-identity -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-nest-optimize
-
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -DNDEBUG -pipe -fgcse-las 
+HOSTCXXFLAGS = -Ofast -DNDEBUG -pipe -fgcse-las 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
 
@@ -329,7 +328,7 @@ include $(srctree)/scripts/Kbuild.include
 # Make variables (CC, etc...)
 export CTNG_LD_IS = gold
 
-ifeq ($(ENABLE_GRAPHITE),true)
+ifeq ($(strip $(ENABLE_GRAPHITE)),true)
 GRAPHITE	:= -fgraphite \
 		 -fgraphite-identity \
 		 -fopenmp
@@ -338,13 +337,15 @@ GRAPHITE_LOOP	:= -floop-interchange \
 		 -floop-strip-mine \
 		 -floop-block	\
 		 -ftree-loop-linear \
-		 -floop-nest-optimize
+		 -floop-nest-optimize \
+		 -floop-parallelize-all \
+   		 -ftree-parallelize-loops=4
 ifneq ($(filter %5% %6%,$(TARGET_SM_KERNEL)),)
 GRAPHITE_LOOP	+= -floop-unroll-and-jam 
 endif
 endif
 
-ifeq ($(O3_OPTIMIZATIONS),true)
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
 OPTIMIZATIONS	:= -O3  $(call cc-disable-warning,maybe-uninitialized,) \
 		 -fgcse-sm \
 		 -Wno-array-bounds \
@@ -355,7 +356,7 @@ LTO		:= -flto=4
 PIPE		:= -pipe
 DNDEBUG		:= -DNDEBUG -g0
 
-ifeq ($(ENABLE_TUNE),true)
+ifeq ($(strip $(ENABLE_TUNE)),true)
 TUNE_FLAGS	:= -marm \
 		 -mtune=cortex-a15 \
 		 -mcpu=cortex-a15 \
@@ -365,7 +366,7 @@ TUNE_FLAGS	:= -marm \
 PARAMETERS	:= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
 endif
 
-ifeq ($(ENABLE_EXTRA),true)
+ifeq ($(strip $(ENABLE_EXTRA)),true)
 MODULO_SCHED	:= -fmodulo-sched \
 		 -fmodulo-sched-allow-regmoves
 
@@ -380,7 +381,7 @@ endif
 
 AS		= $(CROSS_COMPILE)as
 LD		:= $(CROSS_COMPILE)ld -O3 $(LTO)
-CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(FAST_MATH) $(DNDEBUG)
+CC		:= $(CROSS_COMPILE)gcc $(GRAPHITE) $(GRAPHITE_LOOP) $(EXTRA_LOOP) $(OPTIMIZATIONS) $(PIPE) $(PARAMETERS) $(TUNE_FLAGS) $(MODULO_SCHED) $(DNDEBUG)
 CPP		:= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
