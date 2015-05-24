@@ -338,8 +338,7 @@ GRAPHITE_LOOP	:= -floop-interchange \
 		 -floop-block	\
 		 -ftree-loop-linear \
 		 -floop-nest-optimize \
-		 -floop-parallelize-all \
-   		 -ftree-parallelize-loops=4
+		 -floop-parallelize-all
 ifneq ($(filter %5% %6%,$(TARGET_SM_KERNEL)),)
 GRAPHITE_LOOP	+= -floop-unroll-and-jam 
 endif
