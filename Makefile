@@ -1,4 +1,3 @@
-#test
 
 VERSION = 3
 PATCHLEVEL = 4
